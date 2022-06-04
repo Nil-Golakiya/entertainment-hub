@@ -1,0 +1,63 @@
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import SingleContent from "../Component/SingleContent/SingleContent";
+import CustomPagination from "../Component/CustomPagination/CustomPagination";
+import Genres from "../Component/Genres/Genres";
+import useGenres from "../useGenres";
+
+const Movies = () => {
+  const [page, setPage] = useState(1);
+  const [content, setContent] = useState([]);
+  const [numOfPages, setNumOfPages] = useState();
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const genreforURL=useGenres(selectedGenres);
+
+  const fetchMovies = async () => {
+    const { data } = await axios.get(
+      `https://api.themoviedb.org/3/discover/movie?api_key=1107005a8ce91c111d2356ee3e94328c&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genreforURL}`
+    );
+    setContent(data.results);
+    setNumOfPages(data.total_pages);
+  };
+
+  useEffect(() => {
+    fetchMovies();
+    // eslint-disable-next-line
+  }, [page,genreforURL]);
+
+  return (
+    <>
+      <div className="">
+        <span className="pageTitle">Movies</span>
+        <Genres
+          type="movie"
+          selectedGenres={selectedGenres}
+          setSelectedGenres={setSelectedGenres}
+          genres={genres}
+          setGenres={setGenres}
+          setPage={setPage}
+        />
+        <div className="trending">
+          {content &&
+            content.map((c) => (
+              <SingleContent
+                key={c.id}
+                id={c.id}
+                poster={c.poster_path}
+                title={c.title || c.name}
+                date={c.first_air_date || c.release_date}
+                media_type="movie"
+                vote_average={c.vote_average}
+              />
+            ))}
+        </div>
+        {numOfPages > 1 && (
+          <CustomPagination setPage={setPage} numOfPages={numOfPages} />
+        )}
+      </div>
+    </>
+  );
+};
+
+export default Movies;
